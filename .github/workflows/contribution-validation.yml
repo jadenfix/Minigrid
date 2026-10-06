@@ -1,9 +1,9 @@
-name: Tests
-on: [pull_request, push]
-
+name: Contribution full validation
+on:
+  push:
+    branches: ["validation/full-20261005"]
 permissions:
   contents: read
-
 jobs:
   build-latest:
     runs-on: ubuntu-latest
@@ -12,6 +12,8 @@ jobs:
         python-version: ['3.10', '3.11', '3.12', '3.13', '3.14']
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: 344efa5ff9f200cea7cb613878b204c0978c9367
       - run: |
            docker build -f .github/docker/py.Dockerfile \
              --build-arg PYTHON_VERSION=${{ matrix.python-version }} \
@@ -25,9 +27,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: 344efa5ff9f200cea7cb613878b204c0978c9367
       - run: |
           docker build -f .github/docker/py-old.Dockerfile \
              --build-arg PYTHON_VERSION="3.10" \
              --tag minigrid-docker .
       - name: Run tests
         run: docker run minigrid-docker pytest
+
+  contribution-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: 344efa5ff9f200cea7cb613878b204c0978c9367
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - run: pip install pre-commit build
+      - run: pre-commit run --all-files
+      - run: python -m build
